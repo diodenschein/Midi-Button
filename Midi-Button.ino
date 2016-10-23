@@ -1,10 +1,13 @@
 #include <MIDI.h>
 #include "configuration.h"
 #include "macros.h"
+
+
 MIDI_CREATE_DEFAULT_INSTANCE();
 
-byte pins[MAX_INPUT_PINS]= { 0 };
-byte last_pins[MAX_INPUT_PINS]= { 0 };
+
+volatile byte pins[MAX_INPUT_PINS]= { 1 };
+volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 
     struct channel {
       int mute;
@@ -51,38 +54,42 @@ void loop()
    MIDI.read();
    ReadPins();
    StuffButtons();
+
 }
 
 
 void StuffButtons(){
 
 //    sendControlChange(DataByte inControlNumber,DataByte inControlValue,Channel inChannel);
-
+ //digitalWrite(13,1);
 for(int i=0; i<CHANNELS;i++){
   
-  if(channels[i].mute>0){
+  if(channels[i].mute > 0){
     MIDI.sendControlChange(i+1,127,1);
+   
   }
   else if (channels[i].mute<0){
     MIDI.sendControlChange(i+1,0,1);
+    
       }
-  else break; //eigentlich unnötig
   channels[i].mute=0;   
   }
+  //digitalWrite(13,0);
 }
 
 
-//add statemachine idle,down,up,hold
+//add statemachine idle,down,up,hold ?
 
 void ReadPins(){
-for(int i=0; i<(MAX_INPUT_PINS); i++){
+for(int i=0; i<MAX_INPUT_PINS; i++){
     pins[i]=digitalRead(i+2);
     if(pins[i]>last_pins[i]){
-      channels[i].mute=1;
-    }
-    else if (pins[i]<last_pins[i]){
       channels[i].mute=-1;
     }
+    else if (pins[i]<last_pins[i]){
+      channels[i].mute=1;
+    }
+    last_pins[i]=pins[i];
   }
   
 }
@@ -100,7 +107,9 @@ void InitPins(){
   last_pins[i]=digitalRead(i+2);
   }
 
-  
+//DEBUG
+
+   pinMode(13, OUTPUT);
 }
 
  

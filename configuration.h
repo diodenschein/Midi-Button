@@ -3,9 +3,3 @@
 #define GLOBAL_PULLUP true
 
 
-#define BUTTON1_PIN 4
-#define BUTTON2_PIN 5
-#define BUTTON3_PIN 6
-#define BUTTON4_PIN 7
-
-
