@@ -19,7 +19,7 @@ void init_timers(void);
 void init_io(void);
  
 static int input_Pins[] = {2,3,6,7,10,11,16,17};
-static int output_Pins[] = {4,5,8,9,13,12,18,19};
+static int output_Pins[] = {4,5,8,9,12,13,18,19};
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 
@@ -67,7 +67,6 @@ void loop()
     // Call MIDI.read the fastest you can for real-time performance.
   MIDI.read();
   UpdateChannels();
-      //digitalWrite(13, digitalRead(13));
 }
 
 
@@ -102,10 +101,9 @@ void UpdateChannels(){
 //add statemachine idle,down,up,hold ?
 
 void ReadPins(){
-  digitalWrite(13, digitalRead(13));
  unsigned long interrupt_time = Tick_10ms;
- // If interrupts come faster than 200ms, assume it's a bounce and ignore
-// if (interrupt_time - last_interrupt_time > 20) 
+ // If interrupts come faster than 50ms, assume it's a bounce and ignore
+ if (interrupt_time - last_interrupt_time > 5) 
  {
     for(int i=0; i<CHANNELS; i++){
     channels[i].mute = detect_transition(i*2);
@@ -139,7 +137,7 @@ for(int i=0; i<(MAX_INPUT_PINS); i++){
     pinMode(input_Pins[i], INPUT);
 #endif
   pins[i]=digitalRead(input_Pins[i]);
-  last_pins[i]=pins[i];
+  last_pins[i]=0;
   pciSetup(input_Pins[i]);
   }
 
@@ -170,20 +168,21 @@ void init_timers(void)
 {
   cli();            // read and clear atomic !
   //Timer0 for 10ms
-  TCCR0B |= 1<<CS02 | 1<<CS00;  //Divide by 1024
-  TIMSK0 |= 1<<TOIE0;     //enable timer overflow interrupt
+  TCCR2B |= (1 << CS10) | (1<<CS12);  //Divide by 1024
+  TIMSK2 |= 1;     //enable timer overflow interrupt
   sei();            // enable interrupts
 }
  
 
 //--------------------------------------------------------------------------
-ISR(TIM0_OVF_vect)           // interrupt every 10ms 
+ISR(TIMER2_OVF_vect)           // interrupt every 10ms 
 {
   //TCNT0 is where TIMER0 starts counting. This calculates a value based on
   //the system clock speed that will cause the timer to reach an overflow
   //after exactly 10ms
-  TCNT0 = 100; //Preload
+  TCNT2= 100; //Preload
   Tick_10ms++; 
+
 }
 
 ISR (PCINT0_vect) // handle pin change interrupt for D8 to D13 here
