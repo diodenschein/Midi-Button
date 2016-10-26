@@ -12,7 +12,7 @@
 volatile unsigned long Tick_10ms = 0;
 unsigned long last_interrupt_time = 0;
 
- 
+//setup pins {MUTE1,MARKER1,MUTE2,MARKER2,....}
 const int input_Pins[] = {2,3,9,7,10,11,15,17};
 const int output_Pins[] = {13,5,8,8,12,4,18,19};
 
