@@ -12,33 +12,39 @@
 volatile unsigned long Tick_10ms = 0;
 unsigned long last_interrupt_time = 0;
 
-//setup pins {MUTE1,MARKER1,MUTE2,MARKER2,....}
-const int input_Pins[] = {2,3,9,7,10,11,15,17};
-const int output_Pins[] = {13,5,8,8,12,4,18,19};
+ 
+const int input_Pins[] = {13,12,11,9,8,7,5,4,3,A3,A2,A1};
+const int output_Pins[] = {10,6,2,A0};
 
 MIDI_CREATE_DEFAULT_INSTANCE();
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A0, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A5, NEO_GRB + NEO_KHZ800);
+
+Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(1, output_Pins[0], NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel pixel1 = Adafruit_NeoPixel(1, output_Pins[3], NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel pixel2 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel pixel3 = Adafruit_NeoPixel(1, output_Pins[2], NEO_RGB + NEO_KHZ800);
 
 
-static byte pins[MAX_INPUT_PINS]= { 1 };
-static byte last_pins[MAX_INPUT_PINS]= { 1 };
+volatile byte pins[MAX_INPUT_PINS]= { 1 };
+volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 
     struct channel {
       int mute=0;
-      int marker=0;
+      int marker0=0;
+      int marker1=0;
       char mute_led = 0;
     };
-
   channel channels[CHANNELS];
-    
+
+// Handles incoming CC 
 void handleControlChange(byte channel, byte number, byte value){
 if(channel==1){
-    if((number>=32) && (number <=(32+CHANNELS))){ //Mute status 
+    if((number>=65) && (number <=(65+4))){ //Mute status 
       if(value==127){
-        channels[number-32].mute_led = 1;
+        channels[number-65].mute_led = 1;
       }
       else if(value == 0){
-        channels[number-32].mute_led = 0;
+        channels[number-65].mute_led = 0;
       }
    }
   if(number==127){
@@ -62,12 +68,16 @@ void setup(){
   
   // Initiate MIDI communications, listen to all channels
   MIDI.begin(MIDI_CHANNEL_OMNI);
+  MIDI.turnThruOff();
   init_timers();
   InitPins();
-  pinMode(13, OUTPUT);
- //  digitalWrite(13,LOW);
- pixels.begin();
- StripSet(4,5,pixels.Color(0,0,0));
+  pixels.begin();
+  pixel1.begin();
+  pixel2.begin();
+  pixel3.begin();
+  pixel0.begin();
+  //StripSet(0,5,pixels.Color(0,255,255));
+  StripSet(4,5,pixels.Color(0,0,0));
 }
 
 void loop(){
@@ -75,7 +85,6 @@ void loop(){
   // Call MIDI.read the fastest you can for real-time performance.
   MIDI.read();
   UpdateChannels();
-   
 }
 
 
@@ -91,17 +100,42 @@ void UpdateChannels(){
     }
     channels[i].mute=0; 
     
-    if(channels[i].marker > 0){
-      MIDI.sendControlChange(i+17,127,1);
+    if (channels[i].marker0<0){
+      MIDI.sendControlChange(i+9,0,1); 
     }
-    else if (channels[i].marker<0){
+    channels[i].marker0=0;
+    
+    if (channels[i].marker1<0){
       MIDI.sendControlChange(i+17,0,1); 
     }
-    channels[i].marker=0;
+    channels[i].marker1=0;
+
+    uint32_t mutecolor = pixels.Color(255,0,0);
     
-    for(int j=0; j<LED_PER_CHANNEL;j++){
-    digitalWrite(output_Pins[i*LED_PER_CHANNEL],channels[i].mute_led);
-    }
+    if(channels[0].mute_led)
+      pixel0.setPixelColor(0, mutecolor);
+    else
+      pixel0.setPixelColor(0, pixel0.Color(0,0,0));
+    pixel0.show();
+    
+        if(channels[1].mute_led)
+      pixel1.setPixelColor(0, mutecolor);
+    else
+      pixel1.setPixelColor(0, mutecolor);
+    pixel1.show();
+    
+        if(channels[2].mute_led)
+      pixel2.setPixelColor(0, mutecolor);
+    else
+      pixel2.setPixelColor(0, pixel2.Color(0,0,0));
+    pixel2.show();
+        if(channels[0].mute_led)
+      pixel3.setPixelColor(0, mutecolor);
+    else
+      pixel3.setPixelColor(0, pixel3.Color(0,0,0));
+    pixel3.show();
+
+    
   }
 }
 
@@ -111,23 +145,22 @@ void UpdateChannels(){
 void ReadPins(){
   
   // If interrupts come faster than 50ms, assume it's a bounce and ignore
-  unsigned long interrupt_time = Tick_10ms;
-  //if (interrupt_time - last_interrupt_time > 5) 
-  {
+
     for(int i=0; i<CHANNELS; i++)
     {
-    channels[i].mute = detect_transition(i*2);
-    channels[i].marker = detect_transition((i*2)+1);
+    if(!channels[i].mute) channels[i].mute = detect_transition(i*BUTTONS_PER_CHANNEL);
+    if(!channels[i].marker0) channels[i].marker0 = detect_transition((i*BUTTONS_PER_CHANNEL)+1);
+    if(!channels[i].marker1) channels[i].marker1 = detect_transition((i*BUTTONS_PER_CHANNEL)+2);
     }
-  }
-  last_interrupt_time = interrupt_time;
 }
 
 
 int detect_transition(int i){
-
-  pins[i]=digitalRead(input_Pins[i]);  
-  int returnval=0;
+ 
+  int returnval=0; 
+  pins[i] = digitalRead(input_Pins[i]);  
+  //MIDI.sendControlChange(i,pins[i],1); 
+   // MIDI.sendControlChange(i,last_pins[i],1); 
   if(pins[i]>last_pins[i]){
     returnval=-1;
   }
@@ -185,7 +218,7 @@ void init_timers(void){
   
   cli();            // read and clear atomic !
   //Timer0 for 10ms
-  TCCR2B |= (1 << CS10) | (1<<CS12);  //Divide by 1024
+  TCCR2B |= (1 << CS02) | (1<<CS01)| (0<<CS00); //Divide by 1024
   TIMSK2 |= 1;     //enable timer overflow interrupt
   sei();            // enable interrupts
 }
@@ -197,23 +230,24 @@ ISR(TIMER2_OVF_vect){           // interrupt every 10ms
   //TCNT0 is where TIMER0 starts counting. This calculates a value based on
   //the system clock speed that will cause the timer to reach an overflow
   //after exactly 10ms
-  TCNT2= 100; //Preload
+  TCNT2= 1; //Preload
   Tick_10ms++; 
-
 }
 
-ISR (PCINT0_vect){ // handle pin change interrupt for D8 to D13 here
-   
-  ReadPins();  
+ISR (PCINT0_vect){ // handle pin change interrupt for D8 to D13 here 
+  delay(20); 
+  ReadPins(); 
 }
  
 ISR (PCINT1_vect) // handle pin change interrupt for A0 to A5 here
 {
-  ReadPins();
+   delay(20); 
+   ReadPins();  
 }  
  
 ISR (PCINT2_vect) // handle pin change interrupt for D0 to D7 here
 {
-  ReadPins();
+  delay(20); 
+  ReadPins();  
 }  
  
