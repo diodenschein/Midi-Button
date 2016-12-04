@@ -13,8 +13,8 @@ volatile unsigned long Tick_10ms = 0;
 unsigned long last_interrupt_time = 0;
 
  
-const int input_Pins[] = {2,3,9,7,10,11,15,17};
-const int output_Pins[] = {13,5,8,8,12,4,18,19};
+const int input_Pins[] = {13,12,11,9,8,7,5,4,3,A3,A2,A1};
+const int output_Pins[] = {10,6,2,A0};
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A0, NEO_GRB + NEO_KHZ800);

@@ -1,6 +1,6 @@
 #define CHANNELS 4
-#define BUTTONS_PER_CHANNEL 2
-#define LED_PER_CHANNEL 2
+#define BUTTONS_PER_CHANNEL 3
+#define LED_PER_CHANNEL 1
 
 #define GLOBAL_PULLUP true
 
