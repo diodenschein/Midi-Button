@@ -39,12 +39,12 @@ volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 // Handles incoming CC 
 void handleControlChange(byte channel, byte number, byte value){
 if(channel==1){
-    if((number>=65) && (number <=(65+4))){ //Mute status 
+    if((number>=MUTE_FEEDBACK_CONTROL) && (number <=(MUTE_FEEDBACK_CONTROL+CHANNELS))){ //Mute status 
       if(value==127){
-        channels[number-65].mute_led = 1;
+        channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 1;
       }
       else if(value == 0){
-        channels[number-65].mute_led = 0;
+        channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 0;
       }
    }
   if(number==127){
@@ -93,10 +93,10 @@ void UpdateChannels(){
 //    sendControlChange(DataByte inControlNumber,DataByte inControlValue,Channel inChannel);
   for(int i=0; i<CHANNELS;i++){  
     if(channels[i].mute > 0){
-      MIDI.sendControlChange(i+1,127,1);
+      MIDI.sendControlChange(i+MUTE_FEEDBACK_CONTROL,127,1);
     }
     else if (channels[i].mute<0){
-      MIDI.sendControlChange(i+1,0,1); 
+      MIDI.sendControlChange(i+MUTE_FEEDBACK_CONTROL,0,1); 
     }
     channels[i].mute=0; 
     
