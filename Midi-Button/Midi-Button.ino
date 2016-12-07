@@ -3,7 +3,6 @@
 #include <MIDI.h>
 #include <Adafruit_NeoPixel.h>
 #include "configuration.h"
-#include "macros.h"
 #include <avr/interrupt.h>
  
 
@@ -68,6 +67,7 @@ void setup(){
   
   // Initiate MIDI communications, listen to all channels
   MIDI.begin(MIDI_CHANNEL_OMNI);
+  // Turn off midi thru (creates loop) 
   MIDI.turnThruOff();
   init_timers();
   InitPins();
@@ -76,8 +76,6 @@ void setup(){
   pixel2.begin();
   pixel3.begin();
   pixel0.begin();
-  //StripSet(0,5,pixels.Color(0,255,255));
-  StripSet(4,5,pixels.Color(0,0,0));
 }
 
 void loop(){
@@ -89,23 +87,21 @@ void loop(){
 
 
 void UpdateChannels(){
-
-//    sendControlChange(DataByte inControlNumber,DataByte inControlValue,Channel inChannel);
   for(int i=0; i<CHANNELS;i++){  
     if(channels[i].mute > 0){
-      MIDI.sendControlChange(i+MUTE_FEEDBACK_CONTROL,127,1);
+      MIDI.sendControlChange(i+MUTE_CONTROL,127,1);
     }
     else if (channels[i].mute<0){
-      MIDI.sendControlChange(i+MUTE_FEEDBACK_CONTROL,0,1); 
+      MIDI.sendControlChange(i+MUTE_CONTROL,0,1); 
     }
     channels[i].mute=0; 
     
-    if (channels[i].marker0<0){
+    if (channels[i].marker0 < 0){
       MIDI.sendControlChange(i+9,0,1); 
     }
     channels[i].marker0=0;
     
-    if (channels[i].marker1<0){
+    if (channels[i].marker1 < 0){
       MIDI.sendControlChange(i+17,0,1); 
     }
     channels[i].marker1=0;
@@ -118,24 +114,23 @@ void UpdateChannels(){
       pixel0.setPixelColor(0, pixel0.Color(0,0,0));
     pixel0.show();
     
-        if(channels[1].mute_led)
+    if(channels[1].mute_led)
       pixel1.setPixelColor(0, mutecolor);
     else
       pixel1.setPixelColor(0, mutecolor);
     pixel1.show();
     
-        if(channels[2].mute_led)
+    if(channels[2].mute_led)
       pixel2.setPixelColor(0, mutecolor);
     else
       pixel2.setPixelColor(0, pixel2.Color(0,0,0));
     pixel2.show();
-        if(channels[0].mute_led)
+        
+    if(channels[0].mute_led)
       pixel3.setPixelColor(0, mutecolor);
     else
       pixel3.setPixelColor(0, pixel3.Color(0,0,0));
     pixel3.show();
-
-    
   }
 }
 
@@ -143,14 +138,11 @@ void UpdateChannels(){
 //add statemachine idle,down,up,hold ?
 
 void ReadPins(){
-  
-  // If interrupts come faster than 50ms, assume it's a bounce and ignore
-
     for(int i=0; i<CHANNELS; i++)
     {
-    if(!channels[i].mute) channels[i].mute = detect_transition(i*BUTTONS_PER_CHANNEL);
-    if(!channels[i].marker0) channels[i].marker0 = detect_transition((i*BUTTONS_PER_CHANNEL)+1);
-    if(!channels[i].marker1) channels[i].marker1 = detect_transition((i*BUTTONS_PER_CHANNEL)+2);
+      if(!channels[i].mute) channels[i].mute = detect_transition(i*BUTTONS_PER_CHANNEL);
+      if(!channels[i].marker0) channels[i].marker0 = detect_transition((i*BUTTONS_PER_CHANNEL)+1);
+      if(!channels[i].marker1) channels[i].marker1 = detect_transition((i*BUTTONS_PER_CHANNEL)+2);
     }
 }
 
@@ -159,12 +151,10 @@ int detect_transition(int i){
  
   int returnval=0; 
   pins[i] = digitalRead(input_Pins[i]);  
-  //MIDI.sendControlChange(i,pins[i],1); 
-   // MIDI.sendControlChange(i,last_pins[i],1); 
-  if(pins[i]>last_pins[i]){
+  if(pins[i]>last_pins[i]){   //Button was pressed
     returnval=-1;
   }
-  else if (pins[i]<last_pins[i]){
+  else if (pins[i]<last_pins[i]){  //Button was released
     returnval=1;
   }
   last_pins[i]=pins[i];
@@ -172,8 +162,8 @@ int detect_transition(int i){
 }
 
 
-void InitPins(){
-
+void InitPins(){ 
+  
   for(int i=0; i<(MAX_INPUT_PINS); i++){ 
   #if GLOBAL_PULLUP 
     pinMode(input_Pins[i], INPUT_PULLUP);
@@ -181,14 +171,16 @@ void InitPins(){
     pinMode(input_Pins[i], INPUT);
   #endif
   pins[i]=digitalRead(input_Pins[i]);
-  last_pins[i]=pins[i]; //This needs improvement
-  pciSetup(input_Pins[i]);
+  last_pins[i]=pins[i];
+  pciSetup(input_Pins[i]); // setup Pin change interrupt
   }
-  
+
+#ifdef PLAIN_LED  //Set outputs for plain LED 
   for(int i=0; i<(MAX_OUTPUT_PINS); i++){ 
     pinMode(output_Pins[i], OUTPUT);
     digitalWrite(output_Pins[i],LOW);
   }
+#endif
 }
 
 void StripSet(uint8_t st, uint8_t ed, uint32_t c){
@@ -200,7 +192,7 @@ for(int i=st; i<=ed; i++){
 
 
 
-void pciSetup(byte pin){
+void pciSetup(byte pin){// setup Pin change interrupt for single PIN
   
   *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
   PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
