@@ -17,23 +17,24 @@ const int output_Pins[] = {10,6,2,A0};
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 
+#if (PLAIN_LED == 0) //Set outputs for Smart LED 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A5, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(1, output_Pins[0], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel1 = Adafruit_NeoPixel(1, output_Pins[3], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel2 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel3 = Adafruit_NeoPixel(1, output_Pins[2], NEO_RGB + NEO_KHZ800);
-
+#endif
 
 volatile byte pins[MAX_INPUT_PINS]= { 1 };
 volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 
-    struct channel {
+struct channel {
       int mute=0;
       int marker0=0;
       int marker1=0;
       char mute_led = 0;
     };
-  channel channels[CHANNELS];
+channel channels[CHANNELS];
 
 // Handles incoming CC 
 void handleControlChange(byte channel, byte number, byte value){
@@ -47,8 +48,10 @@ if(channel==1){
       }
     ReadPins(); 
     }
+    
 //CLEAN THIS UP
-#ifndef PLAIN_LED  //Set outputs for plain LED 
+
+#if (PLAIN_LED == 0) //Set outputs for Smart LED  
   if(number==127){ 
     switch(value){
         case 0:StripSet(4,5,pixels.Color(0,0,0)); break;
@@ -58,7 +61,8 @@ if(channel==1){
         default: StripSet(4,5,pixels.Color(0,0,0)); break;
     }
   }
-#endif       
+#endif      
+ 
 }  
 }
 
@@ -106,7 +110,7 @@ void UpdateChannels(){
     channels[i].marker1=0;
 
 
-#ifdef PLAIN_LED  //Set outputs for plain LED 
+#if PLAIN_LED //Set outputs for Plain LED 
      
      digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],channels[i].mute_led);
      
@@ -182,7 +186,7 @@ void InitPins(){
   pciSetup(input_Pins[i]); // setup Pin change interrupt
   }
 
-#ifdef PLAIN_LED  //Set outputs for plain LED 
+#if PLAIN_LED //Set outputs for Smart LED 
   for(int i=0; i<(MAX_OUTPUT_PINS); i++){ 
     pinMode(output_Pins[i], OUTPUT);
     digitalWrite(output_Pins[i],LOW);
@@ -196,7 +200,7 @@ void InitPins(){
 #endif
 }
 
-#ifndef PLAIN_LED  //Set outputs for plain LED 
+#if (PLAIN_LED == 0) //Set outputs for Smart LED 
 void StripSet(uint8_t st, uint8_t ed, uint32_t c){
 for(int i=st; i<=ed; i++){
    pixels.setPixelColor(i, c); // Moderately bright green color.
