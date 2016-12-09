@@ -16,8 +16,8 @@ const int input_Pins[] = {13,12,11,9,8,7,5,4,3,A3,A2,A1};
 const int output_Pins[] = {10,6,2,A0};
 
 MIDI_CREATE_DEFAULT_INSTANCE();
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A5, NEO_GRB + NEO_KHZ800);
 
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A5, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(1, output_Pins[0], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel1 = Adafruit_NeoPixel(1, output_Pins[3], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel2 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KHZ800);
@@ -45,8 +45,11 @@ if(channel==1){
       else if(value == 0){
         channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 0;
       }
-   }
-  if(number==127){
+    ReadPins(); 
+    }
+//CLEAN THIS UP
+#ifndef PLAIN_LED  //Set outputs for plain LED 
+  if(number==127){ 
     switch(value){
         case 0:StripSet(4,5,pixels.Color(0,0,0)); break;
         case 1:StripSet(4,5,pixels.Color(0,255,0)); break;
@@ -54,7 +57,8 @@ if(channel==1){
         case 4:StripSet(4,5,pixels.Color(255,0,0)); break;
         default: StripSet(4,5,pixels.Color(0,0,0)); break;
     }
-  }     
+  }
+#endif       
 }  
 }
 
@@ -71,11 +75,6 @@ void setup(){
   MIDI.turnThruOff();
   init_timers();
   InitPins();
-  pixels.begin();
-  pixel1.begin();
-  pixel2.begin();
-  pixel3.begin();
-  pixel0.begin();
 }
 
 void loop(){
@@ -106,8 +105,14 @@ void UpdateChannels(){
     }
     channels[i].marker1=0;
 
+
+#ifdef PLAIN_LED  //Set outputs for plain LED 
+     
+     digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],channels[i].mute_led);
+     
+#else
+
     uint32_t mutecolor = pixels.Color(255,0,0);
-    
     if(channels[0].mute_led)
       pixel0.setPixelColor(0, mutecolor);
     else
@@ -131,6 +136,8 @@ void UpdateChannels(){
     else
       pixel3.setPixelColor(0, pixel3.Color(0,0,0));
     pixel3.show();
+    
+#endif
   }
 }
 
@@ -180,16 +187,23 @@ void InitPins(){
     pinMode(output_Pins[i], OUTPUT);
     digitalWrite(output_Pins[i],LOW);
   }
+#else
+  pixels.begin();
+  pixel1.begin();
+  pixel2.begin();
+  pixel3.begin();
+  pixel0.begin();
 #endif
 }
 
+#ifndef PLAIN_LED  //Set outputs for plain LED 
 void StripSet(uint8_t st, uint8_t ed, uint32_t c){
 for(int i=st; i<=ed; i++){
    pixels.setPixelColor(i, c); // Moderately bright green color.
 }
     pixels.show();
 }
-
+#endif
 
 
 void pciSetup(byte pin){// setup Pin change interrupt for single PIN
@@ -227,19 +241,19 @@ ISR(TIMER2_OVF_vect){           // interrupt every 10ms
 }
 
 ISR (PCINT0_vect){ // handle pin change interrupt for D8 to D13 here 
-  delay(20); 
+  delay(30); 
   ReadPins(); 
 }
  
 ISR (PCINT1_vect) // handle pin change interrupt for A0 to A5 here
 {
-   delay(20); 
+   delay(30); 
    ReadPins();  
 }  
  
 ISR (PCINT2_vect) // handle pin change interrupt for D0 to D7 here
 {
-  delay(20); 
+  delay(30); 
   ReadPins();  
 }  
  
