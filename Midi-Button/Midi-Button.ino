@@ -35,7 +35,7 @@ volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 
 struct channel {
       int mute=0;
-      unsigned long 
+      unsigned long release_delay_time=0;
       int marker0=0;
       int marker1=0;
       char mute_led = 0;
@@ -100,7 +100,7 @@ void UpdateChannels(){
     if(channels[i].mute > 0){
       MIDI.sendControlChange(i+MUTE_CONTROL,PUSH_TO_TALK?0:127,1);
     }
-    else if (channels[i].mute<0){
+    else if ((millis()<=channels[i].release_delay_time) && (channels[i].mute<0)){
       MIDI.sendControlChange(i+MUTE_CONTROL,PUSH_TO_TALK?127:0,1); 
     }
     channels[i].mute=0; 
@@ -159,7 +159,14 @@ void UpdateChannels(){
 void ReadPins(){
     for(int i=0; i<CHANNELS; i++)
     {
-      if(!channels[i].mute) channels[i].mute = detect_transition(i*BUTTONS_PER_CHANNEL);
+      if(!channels[i].mute) {
+        int transition = detect_transition(i*BUTTONS_PER_CHANNEL);
+        channels[i].mute = transition;
+        if(transition){
+          channels[i].release_delay_time = (RELEASE_DELAY_MS+millis());
+        }
+        
+      }
       if(!channels[i].marker0) channels[i].marker0 = detect_transition((i*BUTTONS_PER_CHANNEL)+1);
       if(!channels[i].marker1) channels[i].marker1 = detect_transition((i*BUTTONS_PER_CHANNEL)+2);
     }

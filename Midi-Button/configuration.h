@@ -10,6 +10,7 @@
 #define PUSH_TO_TALK 0
 #define MUTE_CONTROL 1 //CC Midi note so send
 #define MUTE_FEEDBACK_CONTROL 1 //CC Midi note to listen to 
+#define RELEASE_DELAY_MS 500
 
 
 // Don't change anything here. 
