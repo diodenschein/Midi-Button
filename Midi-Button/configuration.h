@@ -5,7 +5,7 @@
 #define GLOBAL_PULLUP 1
 
 #define PLAIN_LED 0   //0:WS2811 style LED, 1:Plain LED to VCC. 
-#define INVERT_LED 0  //0:Mute -> LED On, 1: Mute-> LED OFF
+#define INVERT_MUTE_LED 0  //0:Mute -> LED On, 1: Mute-> LED OFF
 
 #define PUSH_TO_TALK 0
 #define MUTE_CONTROL 1 //CC Midi note so send
