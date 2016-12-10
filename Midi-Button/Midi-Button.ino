@@ -117,33 +117,35 @@ void UpdateChannels(){
 
 #if PLAIN_LED //Set outputs for Plain LED 
      
-     digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],channels[i].mute_led);
+     digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],PUSH_TO_TALK?!channels[i].mute_led:channels[i].mute_led);
      
 #else
 
-    uint32_t mutecolor = pixels.Color(255,0,0);
+    uint32_t mutecolor = PUSH_TO_TALK?pixels.Color(0,0,0):pixels.Color(255,0,0);
+    uint32_t unmutecolor = PUSH_TO_TALK?pixels.Color(255,0,0):pixels.Color(0,0,0);
+    
     if(channels[0].mute_led)
       pixel0.setPixelColor(0, mutecolor);
     else
-      pixel0.setPixelColor(0, pixel0.Color(0,0,0));
+      pixel0.setPixelColor(0, unmutecolor);
     pixel0.show();
     
     if(channels[1].mute_led)
       pixel1.setPixelColor(0, mutecolor);
     else
-      pixel1.setPixelColor(0, mutecolor);
+      pixel1.setPixelColor(0, unmutecolor);
     pixel1.show();
     
     if(channels[2].mute_led)
       pixel2.setPixelColor(0, mutecolor);
     else
-      pixel2.setPixelColor(0, pixel2.Color(0,0,0));
+      pixel2.setPixelColor(0, unmutecolor);
     pixel2.show();
         
     if(channels[0].mute_led)
       pixel3.setPixelColor(0, mutecolor);
     else
-      pixel3.setPixelColor(0, pixel3.Color(0,0,0));
+      pixel3.setPixelColor(0, unmutecolor);
     pixel3.show();
     
 #endif
