@@ -107,14 +107,16 @@ void UpdateChannels(){
     }
     
     if (channels[i].marker0 < 0){
-      MIDI.sendControlChange(i+9,0,1); 
+      MIDI.sendControlChange(i+9,0,1);
+      channels[i].marker0=0;
     }
-    channels[i].marker0=0;
+    
     
     if (channels[i].marker1 < 0){
-      MIDI.sendControlChange(i+17,0,1); 
+      MIDI.sendControlChange(i+17,0,1);
+      channels[i].marker1=0; 
     }
-    channels[i].marker1=0;
+    
 
 
 #if PLAIN_LED //Set outputs for Plain LED 
