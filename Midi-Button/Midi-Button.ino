@@ -35,6 +35,7 @@ volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 
 struct channel {
       int mute=0;
+      unsigned long 
       int marker0=0;
       int marker1=0;
       char mute_led = 0;
@@ -117,12 +118,12 @@ void UpdateChannels(){
 
 #if PLAIN_LED //Set outputs for Plain LED 
      
-     digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],PUSH_TO_TALK?!channels[i].mute_led:channels[i].mute_led);
+     digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],INVERT_LED?!channels[i].mute_led:channels[i].mute_led);
      
 #else
 
-    uint32_t mutecolor = PUSH_TO_TALK?pixels.Color(0,0,0):pixels.Color(255,0,0);
-    uint32_t unmutecolor = PUSH_TO_TALK?pixels.Color(255,0,0):pixels.Color(0,0,0);
+    uint32_t mutecolor = INVERT_LED?pixels.Color(0,0,0):pixels.Color(255,0,0);
+    uint32_t unmutecolor = INVERT_LED?pixels.Color(255,0,0):pixels.Color(0,0,0);
     
     if(channels[0].mute_led)
       pixel0.setPixelColor(0, mutecolor);
