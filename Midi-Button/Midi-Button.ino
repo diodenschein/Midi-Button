@@ -99,11 +99,12 @@ void UpdateChannels(){
   for(int i=0; i<CHANNELS;i++){  
     if(channels[i].mute > 0){
       MIDI.sendControlChange(i+MUTE_CONTROL,PUSH_TO_TALK?0:127,1);
+      channels[i].mute=0;
     }
-    else if ((millis()<=channels[i].release_delay_time) && (channels[i].mute<0)){
-      MIDI.sendControlChange(i+MUTE_CONTROL,PUSH_TO_TALK?127:0,1); 
+    else if ((millis()>=channels[i].release_delay_time) && (channels[i].mute<0)){
+      MIDI.sendControlChange(i+MUTE_CONTROL,PUSH_TO_TALK?127:0,1);
+      channels[i].mute=0;
     }
-    channels[i].mute=0; 
     
     if (channels[i].marker0 < 0){
       MIDI.sendControlChange(i+9,0,1); 
