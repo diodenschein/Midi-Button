@@ -5,6 +5,7 @@
 #define GLOBAL_PULLUP 1
 #define PLAIN_LED 0
 
+#define PUSH_TO_TALK 0
 #define MUTE_CONTROL 1
 #define MUTE_FEEDBACK_CONTROL 1
 

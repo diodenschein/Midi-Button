@@ -1,19 +1,24 @@
 
 
 #include <MIDI.h>
+
+#if (PLAIN_LED == 0) //Set outputs for Smart LED 
 #include <Adafruit_NeoPixel.h>
+#endif
+
 #include "configuration.h"
 #include <avr/interrupt.h>
  
 
 //Debounce variables
-//volatile unsigned long Tick_10ms = 0;
 volatile unsigned long Tick_10ms = 0;
 unsigned long last_interrupt_time = 0;
 
+const int input_Pins[] = {2,3,4,6,7,8,A0,A1,A2,10,11,12};
+const int output_Pins[] = {5,9,A3,13};
  
-const int input_Pins[] = {13,12,11,9,8,7,5,4,3,A3,A2,A1};
-const int output_Pins[] = {10,6,2,A0};
+//const int input_Pins[] = {13,12,11,9,8,7,5,4,3,A3,A2,A1};
+//const int output_Pins[] = {10,6,2,A0};
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 
@@ -38,7 +43,7 @@ channel channels[CHANNELS];
 
 // Handles incoming CC 
 void handleControlChange(byte channel, byte number, byte value){
-if(channel==1){
+if(channel == 1){
     if((number>=MUTE_FEEDBACK_CONTROL) && (number <=(MUTE_FEEDBACK_CONTROL+CHANNELS))){ //Mute status 
       if(value==127){
         channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 1;
@@ -92,10 +97,10 @@ void loop(){
 void UpdateChannels(){
   for(int i=0; i<CHANNELS;i++){  
     if(channels[i].mute > 0){
-      MIDI.sendControlChange(i+MUTE_CONTROL,127,1);
+      MIDI.sendControlChange(i+MUTE_CONTROL,PUSH_TO_TALK?0:127,1);
     }
     else if (channels[i].mute<0){
-      MIDI.sendControlChange(i+MUTE_CONTROL,0,1); 
+      MIDI.sendControlChange(i+MUTE_CONTROL,PUSH_TO_TALK?127:0,1); 
     }
     channels[i].mute=0; 
     
