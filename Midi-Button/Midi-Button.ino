@@ -18,8 +18,8 @@ const int output_Pins[] = {5,9,A3,13};
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 #if (PLAIN_LED == 0) //Set outputs for Smart LED 
-#define STRIPLENGTH 6
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(STRIPLENGTH, A5, NEO_GRB + NEO_KHZ800);
+
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A5, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(1, output_Pins[0], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel1 = Adafruit_NeoPixel(1, output_Pins[3], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel2 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KHZ800);
@@ -29,23 +29,31 @@ Adafruit_NeoPixel pixel3 = Adafruit_NeoPixel(1, output_Pins[2], NEO_RGB + NEO_KH
 volatile byte pins[MAX_INPUT_PINS]= { 1 };
 volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 
-bool rec_feedback=0;
-bool active = 0; //update leds or not
+bool RecFeedback = 0;
+bool PlayFeedback = 0;
+bool PauseFeedback = 0;
+bool GlobalChange = 0;
 
-struct channel {
+bool active = 0; //update leds or not
+//enum ControlLedState : byte {OFF=0, REC, PAUSE};
+//enum ChannelLedState : byte {OFF=0, ARM, MUTE};
+typedef struct{
       int mute=0;
       unsigned long release_delay_time=0;
       int marker0=0;
       int marker1=0;
       char mute_led = 0;
-    };
+      char armed = 0;
+    }channel;
 channel channels[CHANNELS];
 
 // Handles incoming CC 
 void handleControlChange(byte channel, byte number, byte value){
-if(channel == 1){
+  if(channel == 1){
     active = 1;
-    if((number>=MUTE_FEEDBACK_CONTROL) && (number <=(MUTE_FEEDBACK_CONTROL+CHANNELS))){ //Mute status 
+    GlobalChange = 1;
+    if((number>=MUTE_FEEDBACK_CONTROL) && (number <=(MUTE_FEEDBACK_CONTROL+CHANNELS)))
+    { //Mute status 
       if(value==127){
         channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 1;
       }
@@ -53,25 +61,46 @@ if(channel == 1){
         channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 0;
       }
     }
-    if(number == 0x7F){ //Reaper is closing
+    else if((number>=REC_ARM_FEEDBACK_CONTROL) && (number <=(REC_ARM_FEEDBACK_CONTROL+CHANNELS)))
+    { //Rec arm
+      if(value == 127){
+        channels[number-REC_ARM_FEEDBACK_CONTROL].armed = 1;
+      }
+      else if(value == 0){
+        channels[number-REC_ARM_FEEDBACK_CONTROL].armed = 0;
+      }
+    }
+    else if(number == PLAY_FEEDBACK_CONTROL){
+      if(value == 127){
+        RecFeedback = 1;
+      }
+      else if(value == 0){
+        RecFeedback = 0;
+      }
+    }
+    else if(number == PAUSE_FEEDBACK_CONTROL){
+      if(value == 127){
+        PauseFeedback = 1;
+      }
+      else if(value == 0){
+        PauseFeedback = 0;
+      }      
+    }
+    else if(number == REC_FEEDBACK_CONTROL){
+      if(value == 127){
+        RecFeedback = 1;
+      }
+      else if(value == 0){
+        RecFeedback = 0;
+      }     
+    }
+    else if(number == 0x7F){ //Reaper is closing
       LightsOut();
+    } 
+    else{
+      GlobalChange = 0; //Nothing happend
     }
-    
-//CLEAN THIS UP
-
-#if (PLAIN_LED == 0) //Set outputs for Smart LED  
-  if(number==127){ 
-    switch(value){
-        case 0:StripSet(4,5,pixels.Color(0,0,0)); break;
-        case 1:StripSet(4,5,pixels.Color(0,255,0)); break;
-        case 2:StripSet(4,5,pixels.Color(0,255,255)); break;
-        case 4:StripSet(4,5,pixels.Color(255,0,0)); break;
-        default: StripSet(4,5,pixels.Color(0,0,0)); break;
-    }
-  }
-#endif      
- 
-}  
+  }  
 }
 
 // -----------------------------------------------------------------------------
@@ -94,10 +123,58 @@ void loop(){
   MIDI.read();
   if(active)
   {
+    UpdateStrip();
     UpdateChannels();
   }
 }
 
+void UpdateStrip(){
+  if(GlobalChange){
+#if GLOBAL_STATUS
+#if GLOBAL_CHANNEL_STATUS    
+    for(int i=0; i<CHANNELS;i++){  
+      pixels.setPixelColor(i,ChannelStateToColor(i));     
+    }
+    StripSet(CHANNELS, pixels.numPixels(), GlobalStateToColor());
+#else
+    StripSet(0, pixels.numPixels(), GlobalStateToColor());
+#endif  
+  pixels.show(); 
+#endif
+  }
+}
+
+uint32_t ChannelStateToColor(int chan){
+  uint32_t returnval = pixels.Color(CHANNEL_DEFAULT_COLOR);
+  if(channels[chan].mute_led || channels[chan].armed){
+    if(channels[chan].mute_led){
+      returnval = pixels.Color(MUTE_LED_COLOR);
+    }
+    else if(channels[chan].armed){
+      returnval = pixels.Color(ARMED_LED_COLOR);
+    }
+  }
+  else{
+    returnval = pixels.Color(CHANNEL_DEFAULT_COLOR);
+  }
+  return returnval;
+}
+
+uint32_t GlobalStateToColor(){
+  uint32_t returnval = pixels.Color(GLOBAL_DEFAULT_COLOR);
+  if(RecFeedback || PlayFeedback || PauseFeedback){
+    if(RecFeedback){
+      returnval = pixels.Color(GLOBAL_REC_COLOR);
+    }
+    if(PauseFeedback && RecFeedback){
+      returnval = pixels.Color(GLOBAL_PAUSE_COLOR);
+    }
+  }
+  else {
+    returnval = pixels.Color(GLOBAL_DEFAULT_COLOR);
+  }
+  return returnval;
+}
 
 void UpdateChannels(){
   for(int i=0; i<CHANNELS;i++){  
@@ -115,7 +192,6 @@ void UpdateChannels(){
       channels[i].marker0=0;
     }
     
-    
     if (channels[i].marker1 < 0){
       MIDI.sendControlChange(i+17,0,1);
       channels[i].marker1=0; 
@@ -129,32 +205,37 @@ void UpdateChannels(){
      
 #else
 
-    uint32_t mutecolor = INVERT_MUTE_LED?pixels.Color(0,0,0):pixels.Color(255,0,0);
-    uint32_t unmutecolor = INVERT_MUTE_LED?pixels.Color(255,0,0):pixels.Color(0,0,0);
-    
     if(channels[0].mute_led)
-      pixel0.setPixelColor(0, mutecolor);
+      pixel0.setPixelColor(0, MUTE_LED_COLOR);
+    else if(channels[0].armed)
+      pixel0.setPixelColor(0, ARMED_LED_COLOR);
     else
-      pixel0.setPixelColor(0, unmutecolor);
+      pixel0.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
     pixel0.show();
     
     if(channels[1].mute_led)
-      pixel1.setPixelColor(0, mutecolor);
+      pixel1.setPixelColor(0, MUTE_LED_COLOR);
+    else if(channels[1].armed)
+      pixel1.setPixelColor(0, ARMED_LED_COLOR);
     else
-      pixel1.setPixelColor(0, unmutecolor);
+      pixel1.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
     pixel1.show();
     
     if(channels[2].mute_led)
-      pixel2.setPixelColor(0, mutecolor);
+      pixel2.setPixelColor(0, MUTE_LED_COLOR);
+    else if(channels[2].armed)
+      pixel2.setPixelColor(0, ARMED_LED_COLOR);
     else
-      pixel2.setPixelColor(0, unmutecolor);
+      pixel2.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
     pixel2.show();
         
-    if(channels[0].mute_led)
-      pixel3.setPixelColor(0, mutecolor);
+    if(channels[3].mute_led)
+      pixel3.setPixelColor(0, MUTE_LED_COLOR);
+    else if(channels[3].armed)
+      pixel3.setPixelColor(0, ARMED_LED_COLOR);
     else
-      pixel3.setPixelColor(0, unmutecolor);
-    pixel3.show();
+      pixel3.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
+    pixel2.show();
     
 #endif
   }
@@ -244,7 +325,7 @@ void LightsOut(){
   } 
 #else
   uint32_t offcolor = pixels.Color(0,0,0);
-  StripSet(0,STRIPLENGTH,offcolor);
+  StripSet(0,pixels.numPixels(),offcolor);
   pixel0.setPixelColor(0, offcolor);
   pixel0.show();
   pixel1.setPixelColor(0, offcolor);
