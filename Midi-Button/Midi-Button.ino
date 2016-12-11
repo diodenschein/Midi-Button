@@ -52,7 +52,6 @@ if(channel == 1){
       else if(value == 0){
         channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 0;
       }
-    ReadPins(); 
     }
     
 //CLEAN THIS UP
