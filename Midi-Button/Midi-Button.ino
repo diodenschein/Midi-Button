@@ -8,11 +8,6 @@
 
 #include "configuration.h"
 #include <avr/interrupt.h>
- 
-
-//Debounce variables
-volatile unsigned long Tick_10ms = 0;
-unsigned long last_interrupt_time = 0;
 
 const int input_Pins[] = {2,3,4,6,7,8,A0,A1,A2,10,11,12};
 const int output_Pins[] = {5,9,A3,13};
@@ -33,6 +28,7 @@ Adafruit_NeoPixel pixel3 = Adafruit_NeoPixel(1, output_Pins[2], NEO_RGB + NEO_KH
 volatile byte pins[MAX_INPUT_PINS]= { 1 };
 volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 
+bool rec_feedback=0;
 struct channel {
       int mute=0;
       unsigned long release_delay_time=0;
@@ -52,6 +48,10 @@ if(channel == 1){
       else if(value == 0){
         channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 0;
       }
+    }
+    if(number == 0x7F){ //Reaper is closing
+      //Turn off LEDs
+      
     }
     
 //CLEAN THIS UP
@@ -232,33 +232,6 @@ void pciSetup(byte pin){// setup Pin change interrupt for single PIN
   *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
   PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
   PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
-}
-
-
-
-/*--------------------------------------------------------------------------
-  FUNC: 10/13/10 - Sets and starts a system timer
-  PARAMS: NONE
-  RETURNS: NONE
---------------------------------------------------------------------------*/
-void init_timers(void){
-  
-  cli();            // read and clear atomic !
-  //Timer0 for 10ms
-  TCCR2B |= (1 << CS02) | (1<<CS01)| (0<<CS00); //Divide by 1024
-  TIMSK2 |= 1;     //enable timer overflow interrupt
-  sei();            // enable interrupts
-}
- 
-
-//--------------------------------------------------------------------------
-ISR(TIMER2_OVF_vect){           // interrupt every 10ms 
-
-  //TCNT0 is where TIMER0 starts counting. This calculates a value based on
-  //the system clock speed that will cause the timer to reach an overflow
-  //after exactly 10ms
-  TCNT2= 1; //Preload
-  Tick_10ms++; 
 }
 
 ISR (PCINT0_vect){ // handle pin change interrupt for D8 to D13 here 
