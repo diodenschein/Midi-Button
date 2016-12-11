@@ -18,7 +18,8 @@ const int output_Pins[] = {5,9,A3,13};
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 #if (PLAIN_LED == 0) //Set outputs for Smart LED 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A5, NEO_GRB + NEO_KHZ800);
+#define STRIPLENGTH 6
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(STRIPLENGTH, A5, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(1, output_Pins[0], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel1 = Adafruit_NeoPixel(1, output_Pins[3], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel2 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KHZ800);
@@ -29,6 +30,8 @@ volatile byte pins[MAX_INPUT_PINS]= { 1 };
 volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
 
 bool rec_feedback=0;
+bool active = 0; //update leds or not
+
 struct channel {
       int mute=0;
       unsigned long release_delay_time=0;
@@ -41,6 +44,7 @@ channel channels[CHANNELS];
 // Handles incoming CC 
 void handleControlChange(byte channel, byte number, byte value){
 if(channel == 1){
+    active = 1;
     if((number>=MUTE_FEEDBACK_CONTROL) && (number <=(MUTE_FEEDBACK_CONTROL+CHANNELS))){ //Mute status 
       if(value==127){
         channels[number-MUTE_FEEDBACK_CONTROL].mute_led = 1;
@@ -50,8 +54,7 @@ if(channel == 1){
       }
     }
     if(number == 0x7F){ //Reaper is closing
-      //Turn off LEDs
-      
+      LightsOut();
     }
     
 //CLEAN THIS UP
@@ -82,7 +85,6 @@ void setup(){
   MIDI.begin(MIDI_CHANNEL_OMNI);
   // Turn off midi thru (creates loop) 
   MIDI.turnThruOff();
-  init_timers();
   InitPins();
 }
 
@@ -90,7 +92,10 @@ void loop(){
   
   // Call MIDI.read the fastest you can for real-time performance.
   MIDI.read();
-  UpdateChannels();
+  if(active)
+  {
+    UpdateChannels();
+  }
 }
 
 
@@ -159,6 +164,7 @@ void UpdateChannels(){
 //add statemachine idle,down,up,hold ?
 
 void ReadPins(){
+    active = 1;
     for(int i=0; i<CHANNELS; i++)
     {
       if(!channels[i].mute) {
@@ -225,6 +231,30 @@ for(int i=st; i<=ed; i++){
     pixels.show();
 }
 #endif
+
+
+void LightsOut(){
+  active = 0;
+  for(int i=0; i<CHANNELS; i++){
+    channels[i].mute_led=PLAIN_LED?1:0;
+  }
+#if (PLAIN_LED == 1)
+  for(int i=0; i<(MAX_OUTPUT_PINS); i++){ 
+    digitalWrite(output_Pins[i],HIGH);
+  } 
+#else
+  uint32_t offcolor = pixels.Color(0,0,0);
+  StripSet(0,STRIPLENGTH,offcolor);
+  pixel0.setPixelColor(0, offcolor);
+  pixel0.show();
+  pixel1.setPixelColor(0, offcolor);
+  pixel1.show();
+  pixel2.setPixelColor(0, offcolor);
+  pixel2.show();
+  pixel3.setPixelColor(0, offcolor);
+  pixel3.show();
+#endif
+}
 
 
 void pciSetup(byte pin){// setup Pin change interrupt for single PIN
