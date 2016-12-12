@@ -3,7 +3,7 @@
 #include <avr/interrupt.h>
 
 #if (PLAIN_LED == 0) //Set outputs for Smart LED 
-#include <Adafruit_NeoPixel.h>
+#include "USRT_Pixel.h"
 #endif
 
 
