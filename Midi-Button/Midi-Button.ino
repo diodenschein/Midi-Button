@@ -54,6 +54,7 @@ void setup(){
   InitPins();
 }
 
+
 //"Main" loop 
 void loop(){
   MIDI.read(); //handle incoming midi
