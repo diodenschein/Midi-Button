@@ -44,6 +44,7 @@ Adafruit_NeoPixel pixel3 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KH
 Adafruit_NeoPixel pixel4 = Adafruit_NeoPixel(1, output_Pins[2], NEO_RGB + NEO_KHZ800);
 #endif
 
+
 // -----------------------------------------------------------------------------
 void setup(){
   // Set funtion to handle Control change
