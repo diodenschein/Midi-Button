@@ -309,6 +309,7 @@ uint32_t GlobalStateToColor(){
 }
 
 
+//turn off all LEDS
 void LightsOut(){
   active = 0;
   for(int i=0; i<CHANNELS; i++){
