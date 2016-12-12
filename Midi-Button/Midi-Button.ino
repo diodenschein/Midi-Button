@@ -346,15 +346,11 @@ ISR (PCINT0_vect){
   delay(30); 
   ReadPins(); 
 }
-
-
 // handle pin change interrupt for A0 to A5 here
 ISR (PCINT1_vect){
    delay(30); 
    ReadPins();  
 }  
-
-
 // handle pin change interrupt for D0 to D7 here 
 ISR (PCINT2_vect){
   delay(30); 
