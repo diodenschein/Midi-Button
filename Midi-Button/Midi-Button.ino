@@ -17,7 +17,9 @@ typedef struct{
       int mute=0;
       unsigned long release_delay_time=0;
       int marker0=0;
+      unsigned long last_marker0_time=0;
       int marker1=0;
+      unsigned long last_marker1_time=0;
       char mute_led = 0;
       char armed = 0;
     }channel;
@@ -154,13 +156,15 @@ void UpdateChannelState(){
       MIDI.sendControlChange(i+MUTE_CONTROL,PUSH_TO_TALK?127:0,1);
       channels[i].mute=0;
     }
-    if (channels[i].marker0 < 0){
+    if ((millis()>=channels[i].last_marker0_time+(MARKER_TIME_MIN*1000)) && channels[i].marker0 < 0){
       MIDI.sendControlChange(i+9,0,1);
       channels[i].marker0=0;
+      channels[i].last_marker0_time = millis();
     }
-    if (channels[i].marker1 < 0){
+    if ((millis()>=channels[i].last_marker0_time+(MARKER_TIME_MIN*1000)) && channels[i].marker1 < 0){
       MIDI.sendControlChange(i+17,0,1);
       channels[i].marker1=0; 
+      channels[i].last_marker1_time = millis();
     }
     if(GlobalChange){
       //Update LEDS

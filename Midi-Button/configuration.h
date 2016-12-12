@@ -9,6 +9,7 @@
 #define MUTE_LED_COLOR 200,0,0 
 #define ARMED_LED_COLOR 2,0,0
 
+#define MARKER_TIME_MIN  5 //minimum time between marker events beeing sent. 
 
 // Global Status LEDS (Rotlicht)*********************************
 #define GLOBAL_STATUS 1   //Enable global Status LED-Strip
