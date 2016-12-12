@@ -12,9 +12,11 @@
 #define MUTE_LED_COLOR 200,0,0
 #define ARMED_LED_COLOR 2,0,0
 #define CHANNEL_DEFAULT_COLOR 0,0,0
+
 // Global Status LEDS (Rotlicht)*********************************
 
 #define GLOBAL_STATUS 1
+#define GLOBAL_STATUS_PIN A5
 #define GLOBAL_CHANNEL_STATUS 0
 
 #define GLOBAL_DEFAULT_COLOR 0,0,0 //RGB transparent
@@ -23,7 +25,7 @@
 
 //outgoing ******************************************************
 
-#define MUTE_CONTROL 1 //CC Midi note so send
+#define MUTE_CONTROL 0x01 //CC Midi note so send
 
 //Incoming CC ***************************************************
 #define MUTE_FEEDBACK_CONTROL 0x01 //first CC Midi  to listen to 

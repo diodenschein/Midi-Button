@@ -19,11 +19,12 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 
 #if (PLAIN_LED == 0) //Set outputs for Smart LED 
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, A5, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(1, output_Pins[0], NEO_RGB + NEO_KHZ800);
-Adafruit_NeoPixel pixel1 = Adafruit_NeoPixel(1, output_Pins[3], NEO_RGB + NEO_KHZ800);
-Adafruit_NeoPixel pixel2 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KHZ800);
-Adafruit_NeoPixel pixel3 = Adafruit_NeoPixel(1, output_Pins[2], NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(6, GLOBAL_STATUS_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixel1 = Adafruit_NeoPixel(1, output_Pins[0], NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel pixel2 = Adafruit_NeoPixel(1, output_Pins[3], NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel pixel3 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel pixel4 = Adafruit_NeoPixel(1, output_Pins[2], NEO_RGB + NEO_KHZ800);
+
 #endif
 
 volatile byte pins[MAX_INPUT_PINS]= { 1 };
@@ -133,45 +134,45 @@ void UpdateStrip(){
 #if GLOBAL_STATUS
 #if GLOBAL_CHANNEL_STATUS    
     for(int i=0; i<CHANNELS;i++){  
-      pixels.setPixelColor(i,ChannelStateToColor(i));     
+      pixel0.setPixelColor(i,ChannelStateToColor(i));     
     }
-    StripSet(CHANNELS, pixels.numPixels(), GlobalStateToColor());
+    StripSet(CHANNELS, pixel0.numpixel0(), GlobalStateToColor());
 #else
-    StripSet(0, pixels.numPixels(), GlobalStateToColor());
+    StripSet(0, pixel0.numpixel0(), GlobalStateToColor());
 #endif  
-  pixels.show(); 
+  pixel0.show(); 
 #endif
   }
 }
 
 uint32_t ChannelStateToColor(int chan){
-  uint32_t returnval = pixels.Color(CHANNEL_DEFAULT_COLOR);
+  uint32_t returnval = pixel0.Color(CHANNEL_DEFAULT_COLOR);
   if(channels[chan].mute_led || channels[chan].armed){
     if(channels[chan].mute_led){
-      returnval = pixels.Color(MUTE_LED_COLOR);
+      returnval = pixel0.Color(MUTE_LED_COLOR);
     }
     else if(channels[chan].armed){
-      returnval = pixels.Color(ARMED_LED_COLOR);
+      returnval = pixel0.Color(ARMED_LED_COLOR);
     }
   }
   else{
-    returnval = pixels.Color(CHANNEL_DEFAULT_COLOR);
+    returnval = pixel0.Color(CHANNEL_DEFAULT_COLOR);
   }
   return returnval;
 }
 
 uint32_t GlobalStateToColor(){
-  uint32_t returnval = pixels.Color(GLOBAL_DEFAULT_COLOR);
+  uint32_t returnval = pixel0.Color(GLOBAL_DEFAULT_COLOR);
   if(RecFeedback || PlayFeedback || PauseFeedback){
     if(RecFeedback){
-      returnval = pixels.Color(GLOBAL_REC_COLOR);
+      returnval = pixel0.Color(GLOBAL_REC_COLOR);
     }
     if(PauseFeedback && RecFeedback){
-      returnval = pixels.Color(GLOBAL_PAUSE_COLOR);
+      returnval = pixel0.Color(GLOBAL_PAUSE_COLOR);
     }
   }
   else {
-    returnval = pixels.Color(GLOBAL_DEFAULT_COLOR);
+    returnval = pixel0.Color(GLOBAL_DEFAULT_COLOR);
   }
   return returnval;
 }
@@ -206,36 +207,36 @@ void UpdateChannels(){
 #else
 
     if(channels[0].mute_led)
-      pixel0.setPixelColor(0, MUTE_LED_COLOR);
-    else if(channels[0].armed)
-      pixel0.setPixelColor(0, ARMED_LED_COLOR);
-    else
-      pixel0.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
-    pixel0.show();
-    
-    if(channels[1].mute_led)
       pixel1.setPixelColor(0, MUTE_LED_COLOR);
-    else if(channels[1].armed)
+    else if(channels[0].armed)
       pixel1.setPixelColor(0, ARMED_LED_COLOR);
     else
       pixel1.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
     pixel1.show();
     
-    if(channels[2].mute_led)
+    if(channels[1].mute_led)
       pixel2.setPixelColor(0, MUTE_LED_COLOR);
-    else if(channels[2].armed)
+    else if(channels[1].armed)
       pixel2.setPixelColor(0, ARMED_LED_COLOR);
     else
       pixel2.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
     pixel2.show();
-        
-    if(channels[3].mute_led)
+    
+    if(channels[2].mute_led)
       pixel3.setPixelColor(0, MUTE_LED_COLOR);
-    else if(channels[3].armed)
+    else if(channels[2].armed)
       pixel3.setPixelColor(0, ARMED_LED_COLOR);
     else
       pixel3.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
-    pixel2.show();
+    pixel3.show();
+        
+    if(channels[3].mute_led)
+      pixel4.setPixelColor(0, MUTE_LED_COLOR);
+    else if(channels[3].armed)
+      pixel4.setPixelColor(0, ARMED_LED_COLOR);
+    else
+      pixel4.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
+    pixel3.show();
     
 #endif
   }
@@ -296,20 +297,20 @@ void InitPins(){
     digitalWrite(output_Pins[i],LOW);
   }
 #else
-  pixels.begin();
-  pixel1.begin();
+  pixel0.begin();
   pixel2.begin();
   pixel3.begin();
-  pixel0.begin();
+  pixel4.begin();
+  pixel1.begin();
 #endif
 }
 
 #if (PLAIN_LED == 0) //Set outputs for Smart LED 
 void StripSet(uint8_t st, uint8_t ed, uint32_t c){
 for(int i=st; i<=ed; i++){
-   pixels.setPixelColor(i, c); // Moderately bright green color.
+   pixel0.setPixelColor(i, c); // Moderately bright green color.
 }
-    pixels.show();
+    pixel0.show();
 }
 #endif
 
@@ -324,16 +325,16 @@ void LightsOut(){
     digitalWrite(output_Pins[i],HIGH);
   } 
 #else
-  uint32_t offcolor = pixels.Color(0,0,0);
-  StripSet(0,pixels.numPixels(),offcolor);
-  pixel0.setPixelColor(0, offcolor);
-  pixel0.show();
+  uint32_t offcolor = pixel0.Color(0,0,0);
+  StripSet(0,pixel0.numpixel0(),offcolor);
   pixel1.setPixelColor(0, offcolor);
   pixel1.show();
   pixel2.setPixelColor(0, offcolor);
   pixel2.show();
   pixel3.setPixelColor(0, offcolor);
   pixel3.show();
+  pixel4.setPixelColor(0, offcolor);
+  pixel4.show();
 #endif
 }
 
