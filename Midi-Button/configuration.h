@@ -14,7 +14,7 @@
 // Global Status LEDS (Rotlicht)*********************************
 #define GLOBAL_STATUS 1   //Enable global Status LED-Strip
 #define GLOBAL_STATUS_PIN A5 //Pin for LED-Strip
-#define GLOBAL_CHANNEL_STATUS 0 //Use first $CHANNELS LEDs to display channel state. 
+#define GLOBAL_CHANNEL_STATUS 1 //Use first $CHANNELS LEDs to display channel state. 
 
 #define GLOBAL_DEFAULT_COLOR 0,0,0 //RGB transparent
 #define GLOBAL_REC_COLOR 200,0,0 //RGB red

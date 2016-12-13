@@ -37,7 +37,7 @@ bool active = 0; //update leds or not
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 #if (PLAIN_LED == 0) //Set outputs for Smart LED 
-Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(6, GLOBAL_STATUS_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixel0 = Adafruit_NeoPixel(6, GLOBAL_STATUS_PIN, NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel1 = Adafruit_NeoPixel(1, output_Pins[0], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel2 = Adafruit_NeoPixel(1, output_Pins[3], NEO_RGB + NEO_KHZ800);
 Adafruit_NeoPixel pixel3 = Adafruit_NeoPixel(1, output_Pins[1], NEO_RGB + NEO_KHZ800);
@@ -136,7 +136,7 @@ void UpdateStrip(){
     for(int i=0; i<CHANNELS;i++){  
       pixel0.setPixelColor(i,ChannelStateToColor(i));     
     }
-    StripSet(CHANNELS, pixel0.numpixel0(), GlobalStateToColor());
+    StripSet(CHANNELS, pixel0.numPixels(), GlobalStateToColor());
 #else
     StripSet(0, pixel0.numPixels(), GlobalStateToColor());
 #endif  
@@ -320,6 +320,7 @@ void LightsOut(){
   active = 0;
   for(int i=0; i<CHANNELS; i++){
     channels[i].mute_led=0;
+    channels[i].armed=0;
   }
 #if (PLAIN_LED == 1)
   for(int i=0; i<(MAX_OUTPUT_PINS); i++){ 
