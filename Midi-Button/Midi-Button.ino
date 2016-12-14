@@ -7,8 +7,11 @@
 #endif
 
 
-const int input_Pins[] = {2,3,4,6,7,8,A0,A1,A2,10,11,12};
-const int output_Pins[] = {5,9,A3,13};
+const int input_Pins[] = { 2, 3, 4,   //Channel 1: MUTE, Marker1, Marker2
+                           6, 7, 8,   //Channel 2: ...
+                          A0,A1,A2,
+                          10,11,12};
+const int output_Pins[] = {5,9,A3,13}; //LED PINS
 
 volatile byte pins[MAX_INPUT_PINS]= { 1 };
 volatile byte last_pins[MAX_INPUT_PINS]= { 1 };
@@ -158,12 +161,12 @@ void UpdateChannelState(){
       channels[i].mute=0;
     }
     if ((millis()>=channels[i].last_marker0_time+(MARKER_TIME_MIN*1000)) && channels[i].marker0 < 0){
-      MIDI.sendControlChange(i+9,0,1);
+      MIDI.sendControlChange(i+(MARKERS_DISTIGUISH_CHAN?0:MARKER1_CONTROL),0x7F,MARKER_CHANNEL);
       channels[i].marker0=0;
       channels[i].last_marker0_time = millis();
     }
     if ((millis()>=channels[i].last_marker0_time+(MARKER_TIME_MIN*1000)) && channels[i].marker1 < 0){
-      MIDI.sendControlChange(i+17,0,1);
+      MIDI.sendControlChange(i+(MARKERS_DISTIGUISH_CHAN?0:MARKER2_CONTROL),0x7F,MARKER_CHANNEL);
       channels[i].marker1=0; 
       channels[i].last_marker1_time = millis();
     }

@@ -9,6 +9,7 @@
 #define MUTE_LED_COLOR 200,0,0 
 #define ARMED_LED_COLOR 2,0,0
 
+#define MARKERS_DISTIGUISH_CHAN 0 //0: Send same CC for all Tracks 1: Distinguish Tracks
 #define MARKER_TIME_MIN  5 //minimum time between marker events beeing sent. 
 
 // Global Status LEDS (Rotlicht)*********************************
@@ -23,6 +24,10 @@
 
 //outgoing *********************************************************
 #define MUTE_CONTROL 0x01 //CC Midi note so send
+
+#define MARKER_CHANNEL  0x02
+#define MARKER1_CONTROL 0x01
+#define MARKER2_CONTROL 0x09
 
 
 //Incoming CC ******************************************************
