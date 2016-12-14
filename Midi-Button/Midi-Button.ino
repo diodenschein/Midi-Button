@@ -32,7 +32,7 @@ channel channels[CHANNELS];
 bool RecFeedback = 0;
 bool PlayFeedback = 0;
 bool PauseFeedback = 0;
-bool GlobalChange = 0;
+bool FeedbackActive = 0;
 
 bool active = 0; //update leds or not
 
@@ -75,7 +75,7 @@ void loop(){
 void handleControlChange(byte channel, byte number, byte value){
   if(channel == 1){
     active = 1; //update LEDs
-    GlobalChange = 1; //Something happend
+    FeedbackActive = 1; //Something happend
     //Mute state 
     if((number>=MUTE_FEEDBACK_CONTROL) && (number <=(MUTE_FEEDBACK_CONTROL+CHANNELS))){
       if(value==127){
@@ -126,14 +126,14 @@ void handleControlChange(byte channel, byte number, byte value){
       LightsOut();
     } 
     else{
-      GlobalChange = 0; //Nothing happend
+      FeedbackActive = 0; //Nothing happend
     }
   }  
 }
 
 
 void UpdateStrip(){
-  if(GlobalChange){
+  if(FeedbackActive){
 #if PLAIN_LED //Set outputs for Plain LED 
       for(int i=0; i<CHANNELS;i++){  
         digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],INVERT_MUTE_LED?!channels[i].mute_led:channels[i].mute_led);
