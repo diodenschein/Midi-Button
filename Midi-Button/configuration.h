@@ -10,7 +10,10 @@
 #define ARMED_LED_COLOR 2,0,0
 
 #define MARKERS_DISTIGUISH_CHAN 0 //0: Send same CC for all Tracks 1: Distinguish Tracks
-#define MARKER_TIME_MIN  5 //minimum time between marker events beeing sent. 
+#define MARKER_TIME_MIN  5 //minimum time between marker events beeing in Seconds sent. 
+#define MARKER_FEEDBACK_TIME 1000
+#define MARKER0_FEEDBACK_COLOR 0,0,20 //RGB light blue
+#define MARKER1_FEEDBACK_COLOR 0,0,20 //RGB light blue
 
 // Global Status LEDS (Rotlicht)*********************************
 #define GLOBAL_STATUS 1   //Enable global Status LED-Strip

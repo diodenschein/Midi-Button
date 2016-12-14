@@ -134,6 +134,20 @@ void handleControlChange(byte channel, byte number, byte value){
 
 void UpdateStrip(){
   if(GlobalChange){
+#if PLAIN_LED //Set outputs for Plain LED 
+      for(int i=0; i<CHANNELS;i++){  
+        digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],INVERT_MUTE_LED?!channels[i].mute_led:channels[i].mute_led);
+      }
+#else
+      pixel1.setPixelColor(0, ChannelStateToColor(0));
+      pixel1.show();
+      pixel2.setPixelColor(0, ChannelStateToColor(1));
+      pixel2.show();
+      pixel3.setPixelColor(0, ChannelStateToColor(2));
+      pixel3.show();
+      pixel4.setPixelColor(0, ChannelStateToColor(3));
+      pixel4.show();
+#endif
 #if GLOBAL_STATUS
 #if GLOBAL_CHANNEL_STATUS    
     for(int i=0; i<CHANNELS;i++){  
@@ -170,44 +184,6 @@ void UpdateChannelState(){
       channels[i].marker1=0; 
       channels[i].last_marker1_time = millis();
     }
-    if(GlobalChange){
-      //Update LEDS
-#if PLAIN_LED //Set outputs for Plain LED 
-       digitalWrite(output_Pins[i*LEDS_PER_CHANNEL],INVERT_MUTE_LED?!channels[i].mute_led:channels[i].mute_led);
-#else
-      if(channels[0].mute_led)
-        pixel1.setPixelColor(0, MUTE_LED_COLOR);
-      else if(channels[0].armed)
-        pixel1.setPixelColor(0, ARMED_LED_COLOR);
-      else
-        pixel1.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
-      pixel1.show();
-      
-      if(channels[1].mute_led)
-        pixel2.setPixelColor(0, MUTE_LED_COLOR);
-      else if(channels[1].armed)
-        pixel2.setPixelColor(0, ARMED_LED_COLOR);
-      else
-        pixel2.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
-      pixel2.show();
-      
-      if(channels[2].mute_led)
-        pixel3.setPixelColor(0, MUTE_LED_COLOR);
-      else if(channels[2].armed)
-        pixel3.setPixelColor(0, ARMED_LED_COLOR);
-      else
-        pixel3.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
-      pixel3.show();
-          
-      if(channels[3].mute_led)
-        pixel4.setPixelColor(0, MUTE_LED_COLOR);
-      else if(channels[3].armed)
-        pixel4.setPixelColor(0, ARMED_LED_COLOR);
-      else
-        pixel4.setPixelColor(0, CHANNEL_DEFAULT_COLOR);
-      pixel3.show(); 
-    }
-#endif
   }
 }
 
@@ -284,8 +260,14 @@ for(int i=st; i<=ed; i++){
 //Make up a Channel color
 uint32_t ChannelStateToColor(int chan){
   uint32_t returnval = pixel0.Color(CHANNEL_DEFAULT_COLOR);
-  
-  if(channels[chan].mute_led || channels[chan].armed){
+
+  if((channels[chan].last_marker0_time + MARKER_FEEDBACK_TIME)<millis()){
+    returnval = pixel0.Color(MARKER0_FEEDBACK_COLOR);
+  }
+  else if((channels[chan].last_marker1_time + MARKER_FEEDBACK_TIME)<millis()){
+    returnval = pixel0.Color(MARKER1_FEEDBACK_COLOR);
+  }
+  else if(channels[chan].mute_led || channels[chan].armed){
     if(channels[chan].mute_led){
       returnval = pixel0.Color(MUTE_LED_COLOR);
     }
